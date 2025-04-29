@@ -18,7 +18,7 @@
 
 ## 🔐 Autenticação
 
-### 🔸 Tela de Login
+### 🔸 Tela de Login - Colocar TOKEN de autenticação
 **Campos:**
 - `email` (string)
 - `senha` (string)

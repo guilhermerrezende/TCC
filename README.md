@@ -1,6 +1,6 @@
 # 📘 Visão Geral do Projeto
 
-Este documento descreve o escopo, estrutura técnica e principais funcionalidades do MVP (Produto Mínimo Viável) da aplicação de **Cadastro e Gerenciamento de Propriedades Rurais e Urbanas**. A plataforma tem como objetivo oferecer aos usuários a possibilidade de registrar propriedades, manter documentação organizada e, futuramente, gerenciar aspectos financeiros, uso compartilhado e administração de cotistas.
+Este documento descreve o escopo, estrutura técnica e principais funcionalidades do MVP (Produto Mínimo Viável) da aplicação de **Cadastro e Gerenciamento de Propriedades**. A plataforma tem como objetivo oferecer aos usuários a possibilidade de registrar propriedades, manter documentação organizada e, futuramente, gerenciar aspectos financeiros, uso compartilhado e administração de cotistas.
 
 O sistema é dividido em módulos independentes, organizados em fases de desenvolvimento incremental. Nesta primeira fase (MVP), o foco está nas funcionalidades essenciais: autenticação de usuários, cadastro de propriedades e controle de permissões com base em perfis de acesso. A aplicação é composta por um front-end responsivo, uma API RESTful no back-end e um banco de dados relacional para armazenamento das informações.
 

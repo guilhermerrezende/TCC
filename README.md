@@ -1,3 +1,13 @@
+# 📘 Visão Geral do Projeto
+
+Este documento descreve o escopo, estrutura técnica e principais funcionalidades do MVP (Produto Mínimo Viável) da aplicação de **Cadastro e Gerenciamento de Propriedades Rurais e Urbanas**. A plataforma tem como objetivo oferecer aos usuários a possibilidade de registrar propriedades, manter documentação organizada e, futuramente, gerenciar aspectos financeiros, uso compartilhado e administração de cotistas.
+
+O sistema é dividido em módulos independentes, organizados em fases de desenvolvimento incremental. Nesta primeira fase (MVP), o foco está nas funcionalidades essenciais: autenticação de usuários, cadastro de propriedades e controle de permissões com base em perfis de acesso. A aplicação é composta por um front-end responsivo, uma API RESTful no back-end e um banco de dados relacional para armazenamento das informações.
+
+Este documento técnico tem como finalidade orientar o desenvolvimento, testes e validação do sistema, bem como garantir a padronização das integrações entre front-end e back-end, respeitando os critérios de segurança, usabilidade e consistência de dados.
+
+---
+
 # 📌 Documentação Técnica - MVP: Cadastro de Propriedade
 
 ## 👥 Equipe
@@ -7,18 +17,18 @@
 
 ---
 
-## 🧭 Escopo do MVP (Fase 1)
-- Autenticação (Login/Cadastro)
+## 🛋 Escopo do MVP (Fase 1)
+- Autenticação (Login/Cadastro com JWT)
 - Tela de Dashboard Inicial
 - Cadastro de Propriedade
 - Tela de Gerenciamento da Propriedade (sem funcionalidades ativas)
-- Controle de permissões (usuário comum e proprietário master)
+- Controle de permissões por propriedade (usuário comum e proprietário master)
 
 ---
 
 ## 🔐 Autenticação
 
-### 🔸 Tela de Login - Colocar TOKEN de autenticação
+### 🔸 Tela de Login
 **Campos:**
 - `email` (string)
 - `senha` (string)
@@ -39,6 +49,18 @@ POST /api/usuarios/login
 }
 ```
 
+**Resposta:**
+```json
+{
+  "token": "JWT-TOKEN-GERADO",
+  "usuario": {
+    "id": 1,
+    "nomeCompleto": "João Silva",
+    "email": "joao@email.com"
+  }
+}
+```
+
 ### 🔸 Tela de Cadastro
 **Campos:**
 - `nomeCompleto` (string)
@@ -46,7 +68,6 @@ POST /api/usuarios/login
 - `senha` (string)
 - `telefone` (string)
 - `cpf` (string)
-- `permissao` (string - padrão: "proprietario_master")
 
 **Endpoint:**
 ```
@@ -59,26 +80,22 @@ POST /api/usuarios/cadastrar
   "email": "joao@email.com",
   "senha": "123456",
   "telefone": "11999999999",
-  "cpf": "12345678900",
-  "permissao": "proprietario_master"
+  "cpf": "12345678900"
 }
 ```
 
 ---
 
 ## 🏠 Dashboard Inicial (Tela de Propriedades)
-### 🧭 Layout
-- Menu lateral (ícone hambúrguer à esquerda):
-  - Foto do usuário
-  - Opção “Home”
-- Área principal:
-  - Botão: Cadastrar Propriedade
-  - Lista de propriedades (imagem + botão Gerenciar)
-  - Campo de filtro por nome/cep/tipo
+### 🛋 Layout
+- Menu lateral (foto + botões)
+- Botão: Cadastrar Propriedade
+- Lista de propriedades (imagem + botão Gerenciar)
+- Campo de filtro por nome/cep/tipo
 
-**Endpoint para listagem de propriedades:**
+**Endpoint para listagem de propriedades do usuário logado:**
 ```
-GET /api/propriedades?filtro=chacara
+GET /api/usuarios/{id}/propriedades
 ```
 **Response (JSON):**
 ```json
@@ -88,7 +105,8 @@ GET /api/propriedades?filtro=chacara
     "nomePropriedade": "Chácara Primavera",
     "imagemPrincipal": "url-da-imagem.jpg",
     "tipo": "Chácara",
-    "cep": "12345-678"
+    "cep": "12345-678",
+    "permissao": "proprietario_master"
   }
 ]
 ```
@@ -97,47 +115,27 @@ GET /api/propriedades?filtro=chacara
 
 ## 🏗️ Tela: Cadastro de Propriedade
 ### 📋 Campos do formulário:
-- `nomePropriedade` (string, obrigatório)
-- `fotos` (array de arquivos .jpg/.png, mínimo 1, máximo 15)
-- `documento` (arquivo .pdf/.png com nome do proprietário e endereço)
-- `cep` (string)
-- `cidade` (string)
-- `bairro` (string)
-- `logradouro` (string)
-- `numero` (string)
-- `complemento` (string, opcional)
-- `pontoReferencia` (string, opcional)
-- `tipo` (enum: Casa, Apartamento, Lote, Chácara, Sítio, Cobertura, Kitnet, Terreno, Galpão)
-- `valorEstimado` (float)
+- `nomePropriedade`
+- `fotos`
+- `documento`
+- `cep`, `cidade`, `bairro`, `logradouro`, `numero`
+- `complemento`, `pontoReferencia`
+- `tipo`
+- `valorEstimado`
 
 **Endpoint:**
 ```
 POST /api/propriedades/cadastrar
 ```
-**Content-Type:** multipart/form-data
-**Payload (form):**
-```form
-nomePropriedade=Casa Verde
-fotos=[img1.jpg, img2.jpg]
-documento=conta_luz.pdf
-cep=12345678
-cidade=São Paulo
-bairro=Centro
-logradouro=Rua das Flores
-numero=123
-complemento=Apto 10
-pontoReferencia=Próximo ao mercado
-tipo=Casa
-valorEstimado=450000.00
-```
+**Ao cadastrar:** o sistema automaticamente vincula o usuário como `proprietario_master` na tabela `usuarios_propriedades`, somente para aquela propriedade.
 
 ---
 
-## 🧩 Tela: Gerenciamento da Propriedade
+## 🧰 Tela: Gerenciamento da Propriedade
 ### ⚙️ Layout Inicial
 - Exibição dos dados da propriedade
-- Botões (sem funcionalidade nesta fase):
-  - Gerenciar Cotistas (visível apenas para Proprietário Master)
+- Botões:
+  - Gerenciar Cotistas (somente para `proprietario_master` da propriedade)
   - Financeiro
   - Inventário
   - Agendamento de Uso
@@ -145,20 +143,20 @@ valorEstimado=450000.00
 ---
 
 ## 🔐 Permissões
-### Níveis de acesso:
+### Níveis de acesso (por propriedade):
 - **Proprietário Master**:
-  - Pode cadastrar e gerenciar propriedades
-  - Pode editar permissões
-  - Pode acessar botão “Gerenciar Cotistas”
-
+  - Cadastra, gerencia propriedade e permissões
+  - Acesso total na propriedade onde possui esse vínculo
 - **Usuário Comum**:
-  - Apenas visualiza propriedades (nas fases futuras)
+  - Acesso restrito à visualização de dados da propriedade
+
+📌 Um mesmo usuário pode ter diferentes permissões em propriedades distintas (ex: `proprietario_master` de uma e `usuario_comum` de outra).
 
 ---
 
 ## 🔗 Integração Front <-> Back
-- Padrão de variáveis JSON: `camelCase`
-- Exemplo: `valorEstimado`, `pontoReferencia`, `documento`
+- Formato camelCase em JSON
+- Autenticação via JWT obrigatória
 
 ---
 
@@ -188,86 +186,45 @@ valorEstimado=450000.00
 | Senha         | senha          | string                 | Sim         |
 | Telefone      | telefone       | string                 | Sim         |
 | CPF           | cpf            | string                 | Sim         |
-| Permissão     | permissao      | string (enum)          | Sim         |
 | Foto de Perfil| fotoPerfil     | string (base64/URL)    | Não         |
 
 ---
 
 ## ✅ Regras de Validação
-- Ao menos 1 foto obrigatória
+- Pelo menos 1 foto obrigatória
 - Documento obrigatório
-- CEP deve ser válido (formato brasileiro)
+- CEP válido (formato brasileiro)
 - `valorEstimado` > 0
 - CPF e e-mail devem ser únicos
-- Apenas proprietário master pode criar propriedades
+- Permissões são definidas por propriedade (vínculo específico)
+- Apenas o `proprietario_master` de uma propriedade pode alterá-la
 
 ---
 
-## 🔁 Endpoints - Usuários
-
-### 📌 Cadastro
+## 🔀 Endpoints - Usuários
 ```
-POST /api/usuarios/cadastrar
-```
-### 📌 Login
-```
-POST /api/usuarios/login
-```
-### 📌 Exibir usuário
-```
-GET /api/usuarios/{id}
-```
-### 📌 Editar usuário
-```
-PUT /api/usuarios/{id}
-```
-### 📌 Excluir usuário
-```
+POST   /api/usuarios/cadastrar
+POST   /api/usuarios/login
+GET    /api/usuarios/{id}
+PUT    /api/usuarios/{id}
 DELETE /api/usuarios/{id}
 ```
-### 📌 Alterar permissão
-```
-PUT /api/usuarios/{id}/permissao
-```
-
----
 
 ## 🏡 Endpoints - Propriedades
-### 📌 Cadastro
 ```
-POST /api/propriedades/cadastrar
-```
-### 📌 Exibir
-```
-GET /api/propriedades/{id}
-```
-### 📌 Editar
-```
-PUT /api/propriedades/{id}
-```
-### 📌 Excluir
-```
+POST   /api/propriedades/cadastrar
+GET    /api/propriedades/{id}
+PUT    /api/propriedades/{id}
 DELETE /api/propriedades/{id}
-```
-### 📌 Listar
-```
-GET /api/propriedades
-```
-### 📌 Adicionar Fotos
-```
-POST /api/propriedades/{id}/fotos
-```
-### 📌 Validar Documento
-```
-POST /api/propriedades/{id}/validarDocumento
+GET    /api/usuarios/{id}/propriedades
 ```
 
----
-
-## 🔐 Segurança
-- Endpoints exigem autenticação via JWT (exceto cadastro/login)
-- Controle de permissões por token
-- Validação de dados obrigatória
+## 🔐 Endpoints - Permissões e Vínculos
+```
+GET    /api/propriedades/{id}/usuarios
+POST   /api/propriedades/{id}/usuarios/{idUsuario}/permissao
+DELETE /api/propriedades/{id}/usuarios/{idUsuario}
+```
 
 ---
 
@@ -282,7 +239,6 @@ CREATE TABLE usuarios (
     senha VARCHAR(255) NOT NULL,
     telefone VARCHAR(15),
     cpf VARCHAR(14) UNIQUE NOT NULL,
-    permissao ENUM('proprietario_master', 'cotista') NOT NULL,
     dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
@@ -291,7 +247,6 @@ CREATE TABLE usuarios (
 ```sql
 CREATE TABLE propriedades (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idUsuario INT,
     nomePropriedade VARCHAR(255) NOT NULL,
     enderecoCep VARCHAR(10),
     enderecoCidade VARCHAR(255),
@@ -303,8 +258,21 @@ CREATE TABLE propriedades (
     tipo ENUM('Casa', 'Apartamento', 'Chacara', 'Lote', 'Outros') NOT NULL,
     valorEstimado DECIMAL(15, 2),
     documento VARCHAR(255),
-    dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (idUsuario) REFERENCES usuarios(id)
+    dataCadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Tabela: usuarios_propriedades
+```sql
+CREATE TABLE usuarios_propriedades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idUsuario INT NOT NULL,
+    idPropriedade INT NOT NULL,
+    permissao ENUM('proprietario_master', 'usuario_comum') NOT NULL,
+    dataVinculo DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(id),
+    FOREIGN KEY (idPropriedade) REFERENCES propriedades(id),
+    UNIQUE (idUsuario, idPropriedade)
 );
 ```
 
@@ -324,7 +292,7 @@ CREATE TABLE fotos_propriedade (
 CREATE TABLE documentos_propriedade (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idPropriedade INT,
-    tipoDocumento ENUM('IPTU', 'Matrícula', 'Conta de Luz', 'Outros'),
+    tipoDocumento ENUM('IPTU', 'Matricula', 'Conta de Luz', 'Outros'),
     documento VARCHAR(255) NOT NULL,
     dataUpload DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (idPropriedade) REFERENCES propriedades(id)
@@ -334,8 +302,7 @@ CREATE TABLE documentos_propriedade (
 ---
 
 ## 🔗 Relacionamentos (ERD)
-- `usuarios` 1:N `propriedades`
-- `propriedades` N:1 `usuarios`
+- `usuarios` N:N `propriedades` via `usuarios_propriedades`
 - `propriedades` 1:N `fotos_propriedade`
 - `propriedades` 1:N `documentos_propriedade`
 
